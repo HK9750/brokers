@@ -45,11 +45,23 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092
-      --create --if-not-exists --topic orders.created --partitions 3 --replication-factor 1 &&
-      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --describe --topic orders.created
+    command:
+      - /bin/sh
+      - -c
+      - >
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092
+        --create --if-not-exists --topic orders.created --partitions 3 --replication-factor 1;
+        topic_ready=0;
+        for i in 1 2 3 4 5; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --describe --topic orders.created && topic_ready=1 && break;
+          sleep 1;
+        done;
+        [ "$$topic_ready" = "1" ] || exit 1;
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+          /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9092 --list >/dev/null 2>&1 && exit 0;
+          sleep 1;
+        done;
+        exit 1
     restart: "no"
 
 volumes:
