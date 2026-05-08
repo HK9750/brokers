@@ -1,0 +1,32 @@
+{
+  "name": "nats-device-control",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NestJS NATS low-latency device command backend with structured logging",
+  "scripts": {
+    "build": "nest build",
+    "lint": "tsc --noEmit",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/microservices": "^11.1.19",
+    "@nestjs/platform-express": "^11.1.19",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "nats": "^2.29.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.17.10",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,27 @@
+services:
+  api:
+    build: .
+    environment:
+      PORT: 3003
+      NATS_URL: nats://nats:4222
+      NATS_QUEUE_GROUP: device-control-workers
+      DEVICE_COMMAND_TIMEOUT_MS: 1500
+      DEVICE_HEARTBEAT_TTL_MS: 30000
+    ports:
+      - "3003:3003"
+    depends_on:
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
