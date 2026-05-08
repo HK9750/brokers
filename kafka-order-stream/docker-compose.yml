@@ -8,11 +8,12 @@ services:
       KAFKA_CLIENT_ID: order-api
       KAFKA_CONSUMER_CLIENT_ID: order-risk-projection
       KAFKA_CONSUMER_GROUP: order-risk-projection
+      KAFKAJS_NO_PARTITIONER_WARNING: 1
     ports:
       - "3001:3001"
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   kafka:
@@ -38,6 +39,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  kafka-init:
+    image: apache/kafka:3.9.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092
+      --create --if-not-exists --topic orders.created --partitions 3 --replication-factor 1 &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --describe --topic orders.created
+    restart: "no"
 
 volumes:
   kafka_data:
