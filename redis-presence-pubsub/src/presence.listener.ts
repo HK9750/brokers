@@ -13,8 +13,8 @@ export class PresenceListener {
   constructor(private readonly presenceStore: PresenceStore) {}
 
   @EventPattern(PRESENCE_PATTERN)
-  handlePresenceChanged(@Payload() event: PresenceChangedEvent): void {
-    const currentState = this.presenceStore.applyPresenceChanged(event);
+  async handlePresenceChanged(@Payload() event: PresenceChangedEvent): Promise<void> {
+    const currentState = await this.presenceStore.applyPresenceChanged(event);
     this.logger.log('Redis Pub/Sub presence event received', {
       correlationId: event.correlationId,
       eventId: event.eventId,

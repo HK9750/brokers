@@ -11,11 +11,18 @@ services:
       KAFKA_CONSUMER_CLIENT_ID: order-risk-projection
       KAFKA_CONSUMER_GROUP: order-risk-projection
       KAFKAJS_NO_PARTITIONER_WARNING: 1
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
     ports:
       - "3001:3001"
     depends_on:
       kafka-init:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   rabbitmq-report-api:
@@ -26,10 +33,17 @@ services:
       REPORT_QUEUE: report.jobs
       REPORT_PATTERN: report.generate
       REPORT_WORK_MS: 400
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
     ports:
       - "3002:3002"
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     restart: unless-stopped
 
@@ -41,10 +55,17 @@ services:
       NATS_QUEUE_GROUP: device-control-workers
       DEVICE_COMMAND_TIMEOUT_MS: 1500
       DEVICE_HEARTBEAT_TTL_MS: 30000
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
     ports:
       - "3003:3003"
     depends_on:
       nats:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     restart: unless-stopped
 
@@ -59,10 +80,17 @@ services:
       REDIS_RETRY_DELAY_MS: 1000
       PRESENCE_TTL_MS: 60000
       PRESENCE_PATTERN: presence.changed
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
     ports:
       - "3004:3004"
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     restart: unless-stopped
 
@@ -152,6 +180,23 @@ services:
     volumes:
       - redis_data:/data
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U broker_suite -d broker_suite"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
 volumes:
   rabbitmq_data:
   redis_data:
+  postgres_data:

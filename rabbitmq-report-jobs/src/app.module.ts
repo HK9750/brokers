@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpLoggingMiddleware } from './common/observability';
+import { PostgresService } from './common/postgres.service';
 import { REPORT_QUEUE_CLIENT, getRabbitUrl, getReportQueue } from './config';
 import { ReportJobsStore } from './report-jobs.store';
 import { ReportsController } from './reports.controller';
@@ -23,7 +24,7 @@ import { ReportsWorker } from './reports.worker';
     ]),
   ],
   controllers: [ReportsController, ReportsWorker],
-  providers: [ReportsService, ReportJobsStore],
+  providers: [ReportsService, ReportJobsStore, PostgresService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

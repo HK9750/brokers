@@ -44,16 +44,16 @@ export class OrdersController {
   }
 
   @Get('customers/:customerId/projection')
-  getCustomerProjection(@Param('customerId') customerId: string): Record<string, unknown> {
+  async getCustomerProjection(@Param('customerId') customerId: string): Promise<Record<string, unknown>> {
     return {
       projectionType: 'customer-order-history',
-      projection: this.projectionStore.getCustomerProjection(customerId),
+      projection: await this.projectionStore.getCustomerProjection(customerId),
     };
   }
 
   @Get('projections')
-  listProjections(): Record<string, unknown> {
-    const projections = this.projectionStore.listCustomerProjections();
+  async listProjections(): Promise<Record<string, unknown>> {
+    const projections = await this.projectionStore.listCustomerProjections();
 
     return {
       count: projections.length,

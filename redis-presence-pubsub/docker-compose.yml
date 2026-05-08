@@ -10,10 +10,17 @@ services:
       REDIS_RETRY_DELAY_MS: 1000
       PRESENCE_TTL_MS: 60000
       PRESENCE_PATTERN: presence.changed
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
     ports:
       - "3004:3004"
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     restart: unless-stopped
 
@@ -30,5 +37,22 @@ services:
     volumes:
       - redis_data:/data
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U broker_suite -d broker_suite"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
 volumes:
   redis_data:
+  postgres_data:

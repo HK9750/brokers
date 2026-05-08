@@ -50,6 +50,7 @@ DevicesResponder telemetry handler
 | Contract | `src/device.contract.ts` | Defines command, acknowledgement, and telemetry payloads. |
 | Validation | `src/devices.dto.ts` | Validates allowed commands and telemetry payloads. |
 | Broker config | `src/config.ts` | Reads NATS URL, queue group, timeout, and port. |
+| Database | `src/common/postgres.service.ts` | Owns the Postgres connection pool used by the device registry. |
 | Observability | `src/common/observability.ts` | Adds JSON logging, correlation IDs, HTTP logs, and exception logs. |
 
 NATS is used because command/control traffic should be fast. The caller needs a quick acknowledgement, not a long durable event history.
@@ -98,7 +99,7 @@ Production hardening usually adds:
 
 This is the exact local command flow:
 
-1. `POST /devices/:deviceId/heartbeat` records a fresh heartbeat in `DevicesRegistry`.
+1. `POST /devices/:deviceId/heartbeat` records a fresh heartbeat in Postgres-backed `DevicesRegistry`.
 2. `POST /devices/:deviceId/commands` receives JSON with `command` and optional `payload`.
 3. `HttpLoggingMiddleware` creates or forwards `x-correlation-id` and logs request start.
 4. `ValidationPipe` rejects unknown commands.
@@ -123,7 +124,7 @@ This is the exact local telemetry flow:
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Confirms the API is running and shows the NATS queue group. |
-| `GET` | `/devices` | Lists local device control-plane state. |
+| `GET` | `/devices` | Lists Postgres-backed device control-plane state. |
 | `GET` | `/devices/:deviceId` | Returns heartbeat, command, and telemetry state for one device. |
 | `POST` | `/devices/:deviceId/heartbeat` | Marks a device online so commands can be accepted. |
 | `POST` | `/devices/:deviceId/commands` | Sends a request-reply command over NATS. |
@@ -203,6 +204,12 @@ http://localhost:8222
 | `NATS_QUEUE_GROUP` | `device-control-workers` | Queue group for command handlers. |
 | `DEVICE_COMMAND_TIMEOUT_MS` | `1500` | HTTP command timeout window. |
 | `DEVICE_HEARTBEAT_TTL_MS` | `30000` | How long a heartbeat stays fresh for command gating. |
+| `POSTGRES_HOST` | `localhost` | Postgres host. |
+| `POSTGRES_PORT` | `5432` | Postgres port. |
+| `POSTGRES_USER` | `broker_suite` | Postgres username. |
+| `POSTGRES_PASSWORD` | `broker_suite` | Postgres password. |
+| `POSTGRES_DB` | `broker_suite` | Postgres database. |
+| `POSTGRES_POOL_MAX` | `10` | Max database pool connections. |
 
 ## Logging
 

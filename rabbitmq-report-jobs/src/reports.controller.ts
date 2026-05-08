@@ -38,8 +38,8 @@ export class ReportsController {
   }
 
   @Get('reports')
-  listReportJobs(): Record<string, unknown> {
-    const jobs = this.reportsService.listReportJobs();
+  async listReportJobs(): Promise<Record<string, unknown>> {
+    const jobs = await this.reportsService.listReportJobs();
 
     return {
       count: jobs.length,
@@ -48,9 +48,9 @@ export class ReportsController {
   }
 
   @Get('reports/:jobId')
-  getReportJob(@Param('jobId') jobId: string): Record<string, unknown> {
+  async getReportJob(@Param('jobId') jobId: string): Promise<Record<string, unknown>> {
     return {
-      job: this.reportsService.getReportJob(jobId),
+      job: await this.reportsService.getReportJob(jobId),
     };
   }
 }

@@ -394,7 +394,7 @@ Avoid Redis Pub/Sub when:
 | Structured JSON logs | Yes | Yes | Yes | Yes |
 | Input validation | Yes | Yes | Yes | Yes |
 | Idempotency | HTTP order idempotency key | Job IDs | Command IDs | Event IDs |
-| Current read model | Customer projection | Job status store | Device registry | Presence store |
+| Current read model | Postgres customer projection | Postgres job status store | Postgres device registry | Postgres presence store |
 | Failure path | High-risk warning | Simulated failed job | Rejected stale command | Offline cleanup |
 | Broker metadata logs | Partition/offset | Delivery tag/redelivery | Command latency | Channel/event fanout |
 
@@ -404,7 +404,7 @@ This project intentionally stays small enough to study. A real production system
 
 | Area | Production Addition |
 | --- | --- |
-| Persistence | PostgreSQL, MongoDB, DynamoDB, or another real database for status/read models. |
+| Persistence | This demo now uses Postgres; production still needs migrations, backups, PITR, retention policies, and HA. |
 | Auth | JWT, mTLS, API keys, or service-to-service identity. |
 | Metrics | Prometheus counters/histograms for latency, failures, lag, queue depth, and retries. |
 | Tracing | OpenTelemetry spans across HTTP, broker publish, and broker consume. |

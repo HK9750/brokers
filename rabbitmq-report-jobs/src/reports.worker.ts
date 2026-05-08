@@ -27,12 +27,12 @@ export class ReportsWorker {
       deliveryTag: message.fields.deliveryTag,
       redelivered: message.fields.redelivered,
     });
-    this.jobsStore.markProcessing(job);
+    await this.jobsStore.markProcessing(job);
 
     try {
       const artifact = await this.generateReport(job);
       const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
-      const record = this.jobsStore.markCompleted(job, artifact);
+      const record = await this.jobsStore.markCompleted(job, artifact);
 
       channel.ack(message);
 
@@ -45,7 +45,7 @@ export class ReportsWorker {
         artifact: record.artifact,
       });
     } catch (error) {
-      const record = this.jobsStore.markFailed(job, error);
+      const record = await this.jobsStore.markFailed(job, error);
       channel.nack(message, false, false);
       this.logger.error('RabbitMQ report job failed and was nacked', error instanceof Error ? error.stack : undefined, {
         correlationId: job.correlationId,

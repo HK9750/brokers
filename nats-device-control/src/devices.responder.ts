@@ -25,7 +25,7 @@ export class DevicesResponder {
 
     await new Promise((resolve) => setTimeout(resolve, 25));
 
-    const commandGate = this.registry.canAcceptCommand(message.deviceId);
+    const commandGate = await this.registry.canAcceptCommand(message.deviceId);
 
     if (!commandGate.accepted) {
       this.logger.warn('NATS command rejected by device heartbeat gate', {
@@ -49,8 +49,8 @@ export class DevicesResponder {
   }
 
   @EventPattern(DEVICE_TELEMETRY_PATTERN)
-  handleTelemetry(@Payload() event: DeviceTelemetryEvent): void {
-    const deviceState = this.registry.recordTelemetry(event);
+  async handleTelemetry(@Payload() event: DeviceTelemetryEvent): Promise<void> {
+    const deviceState = await this.registry.recordTelemetry(event);
     this.logger.log('NATS telemetry event consumed', {
       correlationId: event.correlationId,
       eventId: event.eventId,

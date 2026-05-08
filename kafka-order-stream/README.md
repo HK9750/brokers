@@ -36,6 +36,7 @@ Risk / customer timeline projection
 | Contract | `src/order-events.contract.ts` | Defines the event shape shared by producer and consumer. |
 | Validation | `src/orders.dto.ts` | Validates incoming order payloads. |
 | Broker config | `src/config.ts` | Reads Kafka brokers, topic, client IDs, and port. |
+| Database | `src/common/postgres.service.ts` | Owns the Postgres connection pool used by the projection store. |
 | Observability | `src/common/observability.ts` | Adds JSON logging, correlation IDs, HTTP logs, and exception logs. |
 
 Kafka is used because order events are valuable historical facts. They should be retained, ordered by customer, and replayable by new consumers.
@@ -87,7 +88,7 @@ This is the exact local demo flow:
 8. HTTP response returns `accepted: true`, `duplicate`, the topic name, projection URL, and the event body.
 9. `OrderEventsConsumer` receives the event from Kafka as part of consumer group `order-risk-projection`.
 10. The consumer logs topic, partition, offset, order ID, total, customer ID, and risk score.
-11. `OrderProjectionStore` updates the queryable customer read model.
+11. `OrderProjectionStore` persists the queryable customer read model in Postgres table `kafka_customer_order_projections`.
 12. If risk score is high, the consumer logs a manual review warning.
 13. If risk score is normal, the consumer logs that the order was projected into the customer timeline.
 
@@ -98,7 +99,7 @@ This is the exact local demo flow:
 | `GET` | `/health` | Confirms the API is running and shows the Kafka topic. |
 | `POST` | `/orders` | Accepts an order and appends an event to Kafka. |
 | `GET` | `/customers/:customerId/projection` | Returns the customer order projection built by the Kafka consumer. |
-| `GET` | `/projections` | Lists all in-memory customer projections. |
+| `GET` | `/projections` | Lists all Postgres-backed customer projections. |
 
 Create an order:
 
@@ -164,6 +165,12 @@ docker compose up --build
 | `KAFKA_CLIENT_ID` | `order-api` | Producer client ID. |
 | `KAFKA_CONSUMER_CLIENT_ID` | `order-risk-projection` | Consumer client ID. |
 | `KAFKA_CONSUMER_GROUP` | `order-risk-projection` | Consumer group ID. |
+| `POSTGRES_HOST` | `localhost` | Postgres host. |
+| `POSTGRES_PORT` | `5432` | Postgres port. |
+| `POSTGRES_USER` | `broker_suite` | Postgres username. |
+| `POSTGRES_PASSWORD` | `broker_suite` | Postgres password. |
+| `POSTGRES_DB` | `broker_suite` | Postgres database. |
+| `POSTGRES_POOL_MAX` | `10` | Max database pool connections. |
 
 ## Logging
 
@@ -176,6 +183,6 @@ Important log events:
 | `Publishing order event to Kafka` | Producer is sending an order event. |
 | `Order event committed to Kafka producer buffer` | Publish call completed from the API perspective. |
 | `Kafka order event consumed for projection` | Consumer received the event and has Kafka metadata. |
-| `Customer projection updated from Kafka stream` | Read model was updated from the consumed event. |
+| `Customer projection updated from Kafka stream` | Postgres read model was updated from the consumed event. |
 | `High-risk order flagged for manual review` | Risk score crossed the local demo threshold. |
 | `Order projected into customer timeline` | Normal projection flow completed. |

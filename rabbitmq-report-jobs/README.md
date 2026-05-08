@@ -36,6 +36,7 @@ Report artifact location log
 | Contract | `src/report.contract.ts` | Defines the job payload shared by producer and worker. |
 | Validation | `src/reports.dto.ts` | Validates report type, date range, requester, and priority. |
 | Broker config | `src/config.ts` | Reads RabbitMQ URL, queue name, pattern, port, and simulated work time. |
+| Database | `src/common/postgres.service.ts` | Owns the Postgres connection pool used by the job status store. |
 | Observability | `src/common/observability.ts` | Adds JSON logging, correlation IDs, HTTP logs, and exception logs. |
 
 RabbitMQ is used because report generation is slow work. The API should not keep the HTTP client waiting while a worker creates a file.
@@ -83,7 +84,7 @@ This is the exact local demo flow:
 2. `HttpLoggingMiddleware` creates or forwards `x-correlation-id` and logs request start.
 3. `ValidationPipe` rejects invalid report requests.
 4. `ReportsController` logs that report generation was accepted for background processing.
-5. `ReportsService` creates a `jobId`, stores a local `queued` status, builds a `ReportJob`, and publishes it with pattern `report.generate`.
+5. `ReportsService` creates a `jobId`, stores a Postgres-backed `queued` status, builds a `ReportJob`, and publishes it with pattern `report.generate`.
 6. API returns `accepted: true`, the queue name, status URL, and job status record.
 7. `ReportsWorker` receives the job from queue `report.jobs`.
 8. Worker marks the job `processing` and logs delivery tag, redelivery status, job type, priority, and queue name.
@@ -98,7 +99,7 @@ This is the exact local demo flow:
 | --- | --- | --- |
 | `GET` | `/health` | Confirms the API is running and shows the queue name. |
 | `POST` | `/reports` | Enqueues a durable report generation job. |
-| `GET` | `/reports` | Lists local job status records. |
+| `GET` | `/reports` | Lists Postgres-backed job status records. |
 | `GET` | `/reports/:jobId` | Returns the current status for one report job. |
 
 Create a report job:
@@ -148,7 +149,7 @@ curl -X POST http://localhost:3002/reports \
   -d '{"type":"compliance","requestedBy":"audit@example.com","dateFrom":"2026-01-01","dateTo":"2026-01-31","priority":"critical","simulateFailure":true}'
 ```
 
-The response contains a nested status record because the API returns the local production-style job state, not only the raw broker payload.
+The response contains a nested status record because the API returns the Postgres-backed production-style job state, not only the raw broker payload.
 
 Raw broker job fields look like this inside `job.job`:
 
@@ -194,6 +195,12 @@ RabbitMQ Management UI:
 | `REPORT_QUEUE` | `report.jobs` | Queue used for report jobs. |
 | `REPORT_PATTERN` | `report.generate` | Nest message pattern. |
 | `REPORT_WORK_MS` | `400` | Simulated report generation time. |
+| `POSTGRES_HOST` | `localhost` | Postgres host. |
+| `POSTGRES_PORT` | `5432` | Postgres port. |
+| `POSTGRES_USER` | `broker_suite` | Postgres username. |
+| `POSTGRES_PASSWORD` | `broker_suite` | Postgres password. |
+| `POSTGRES_DB` | `broker_suite` | Postgres database. |
+| `POSTGRES_POOL_MAX` | `10` | Max database pool connections. |
 
 ## Logging
 

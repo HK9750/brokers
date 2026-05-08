@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpLoggingMiddleware } from './common/observability';
+import { PostgresService } from './common/postgres.service';
 import { ORDER_STREAM_CLIENT, getKafkaBrokers } from './config';
 import { OrderEventsConsumer } from './order-events.consumer';
 import { OrderProjectionStore } from './order-projection.store';
@@ -24,7 +25,7 @@ import { OrdersService } from './orders.service';
     ]),
   ],
   controllers: [OrdersController, OrderEventsConsumer],
-  providers: [OrdersService, OrderProjectionStore],
+  providers: [OrdersService, OrderProjectionStore, PostgresService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

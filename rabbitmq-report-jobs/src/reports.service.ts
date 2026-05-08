@@ -42,7 +42,7 @@ export class ReportsService implements OnModuleInit, OnModuleDestroy {
       requestedAt: new Date().toISOString(),
       correlationId,
     };
-    const record = this.jobsStore.createQueued(job);
+    const record = await this.jobsStore.createQueued(job);
 
     this.logger.log('Publishing report job to RabbitMQ', {
       correlationId,
@@ -65,11 +65,11 @@ export class ReportsService implements OnModuleInit, OnModuleDestroy {
     return record;
   }
 
-  getReportJob(jobId: string): ReportJobRecord {
+  getReportJob(jobId: string): Promise<ReportJobRecord> {
     return this.jobsStore.getJob(jobId);
   }
 
-  listReportJobs(): ReportJobRecord[] {
+  listReportJobs(): Promise<ReportJobRecord[]> {
     return this.jobsStore.listJobs();
   }
 }

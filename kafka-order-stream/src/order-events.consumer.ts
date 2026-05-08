@@ -14,7 +14,7 @@ export class OrderEventsConsumer {
   constructor(private readonly projectionStore: OrderProjectionStore) {}
 
   @EventPattern(ORDER_CREATED_TOPIC)
-  handleOrderCreated(@Payload() payload: KafkaPayload<OrderCreatedEvent>, @Ctx() context: KafkaContext): void {
+  async handleOrderCreated(@Payload() payload: KafkaPayload<OrderCreatedEvent>, @Ctx() context: KafkaContext): Promise<void> {
     const event = this.unwrapPayload(payload);
     const message = context.getMessage();
     const riskScore = this.calculateRiskScore(event);
@@ -34,7 +34,7 @@ export class OrderEventsConsumer {
     };
 
     this.logger.log('Kafka order event consumed for projection', metadata);
-    const projection = this.projectionStore.applyOrderCreated(event, riskScore, brokerMetadata);
+    const projection = await this.projectionStore.applyOrderCreated(event, riskScore, brokerMetadata);
 
     if (riskScore >= 80) {
       this.logger.warn('High-risk order flagged for manual review', {

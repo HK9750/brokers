@@ -38,6 +38,7 @@ Live UI / WebSocket gateway behavior
 | Contract | `src/presence.contract.ts` | Defines the presence event shape. |
 | Validation | `src/presence.dto.ts` | Validates user ID, status, room ID, and device ID. |
 | Broker config | `src/config.ts` | Reads Redis host, port, retry settings, channel, and HTTP port. |
+| Database | `src/common/postgres.service.ts` | Owns the Postgres connection pool used by the current presence store. |
 | Observability | `src/common/observability.ts` | Adds JSON logging, correlation IDs, HTTP logs, and exception logs. |
 
 Redis Pub/Sub is used because presence is a live hint, not a permanent business fact. The latest state matters more than replaying every historical presence change.
@@ -85,7 +86,7 @@ This is the exact local demo flow:
 5. `PresenceService` creates an `eventId` and publishes `PresenceChangedEvent` to channel `presence.changed`.
 6. API returns `accepted: true` with the event body.
 7. `PresenceListener` receives the event from Redis Pub/Sub.
-8. `PresenceStore` updates current user presence with TTL-style expiry metadata.
+8. `PresenceStore` persists current user presence with TTL-style expiry metadata in Postgres table `redis_presence_states`.
 9. Listener logs the received event with user, status, room, device, and correlation ID.
 10. If `roomId` is present, listener logs room routing to `room:<roomId>`.
 11. If status is `offline`, listener logs volatile session cleanup.
@@ -96,7 +97,7 @@ This is the exact local demo flow:
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Confirms the API is running and shows the Redis Pub/Sub channel. |
-| `GET` | `/presence` | Lists current local presence state. |
+| `GET` | `/presence` | Lists current Postgres-backed presence state. |
 | `GET` | `/presence/:userId` | Returns current presence for one user. |
 | `GET` | `/rooms/:roomId/presence` | Returns current online users in one room. |
 | `POST` | `/presence` | Publishes an ephemeral presence event over Redis Pub/Sub. |
@@ -164,6 +165,12 @@ docker compose up --build
 | `REDIS_RETRY_DELAY_MS` | `1000` | Delay between Redis retry attempts. |
 | `PRESENCE_TTL_MS` | `60000` | Local current-presence freshness window. |
 | `PRESENCE_PATTERN` | `presence.changed` | Redis Pub/Sub channel. |
+| `POSTGRES_HOST` | `localhost` | Postgres host. |
+| `POSTGRES_PORT` | `5432` | Postgres port. |
+| `POSTGRES_USER` | `broker_suite` | Postgres username. |
+| `POSTGRES_PASSWORD` | `broker_suite` | Postgres password. |
+| `POSTGRES_DB` | `broker_suite` | Postgres database. |
+| `POSTGRES_POOL_MAX` | `10` | Max database pool connections. |
 
 ## Logging
 
@@ -172,7 +179,7 @@ Important log events:
 | Log Message | Meaning |
 | --- | --- |
 | `Publishing ephemeral presence event to Redis Pub/Sub` | API published the presence event. |
-| `Presence state updated from Redis Pub/Sub event` | Local current-presence state was updated. |
+| `Presence state updated from Redis Pub/Sub event` | Postgres current-presence state was updated. |
 | `Redis Pub/Sub presence event received` | Subscriber received the event. |
 | `Presence event routed to room subscribers` | Event would be sent to a WebSocket room. |
 | `Offline presence event triggers volatile session cleanup` | Offline cleanup flow was triggered. |

@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpLoggingMiddleware } from './common/observability';
+import { PostgresService } from './common/postgres.service';
 import { NATS_BUS_CLIENT, getNatsServers } from './config';
 import { DevicesController } from './devices.controller';
 import { DevicesRegistry } from './devices.registry';
@@ -20,7 +21,7 @@ import { DevicesService } from './devices.service';
     ]),
   ],
   controllers: [DevicesController, DevicesResponder],
-  providers: [DevicesService, DevicesRegistry],
+  providers: [DevicesService, DevicesRegistry, PostgresService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

@@ -20,8 +20,8 @@ export class PresenceController {
   }
 
   @Get('presence')
-  listPresence(): Record<string, unknown> {
-    const users = this.presenceStore.listPresence();
+  async listPresence(): Promise<Record<string, unknown>> {
+    const users = await this.presenceStore.listPresence();
 
     return {
       count: users.length,
@@ -30,16 +30,16 @@ export class PresenceController {
   }
 
   @Get('presence/:userId')
-  getUserPresence(@Param('userId') userId: string): Record<string, unknown> {
+  async getUserPresence(@Param('userId') userId: string): Promise<Record<string, unknown>> {
     return {
-      presence: this.presenceStore.getUserPresence(userId),
+      presence: await this.presenceStore.getUserPresence(userId),
     };
   }
 
   @Get('rooms/:roomId/presence')
-  getRoomPresence(@Param('roomId') roomId: string): Record<string, unknown> {
+  async getRoomPresence(@Param('roomId') roomId: string): Promise<Record<string, unknown>> {
     return {
-      room: this.presenceStore.getRoomPresence(roomId),
+      room: await this.presenceStore.getRoomPresence(roomId),
     };
   }
 

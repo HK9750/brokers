@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpLoggingMiddleware } from './common/observability';
+import { PostgresService } from './common/postgres.service';
 import { REDIS_PUBSUB_CLIENT, getRedisTransportOptions } from './config';
 import { PresenceController } from './presence.controller';
 import { PresenceListener } from './presence.listener';
@@ -18,7 +19,7 @@ import { PresenceStore } from './presence.store';
     ]),
   ],
   controllers: [PresenceController, PresenceListener],
-  providers: [PresenceService, PresenceStore],
+  providers: [PresenceService, PresenceStore, PostgresService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

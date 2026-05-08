@@ -16,8 +16,8 @@ export class DevicesController {
   }
 
   @Get('devices')
-  listDevices(): Record<string, unknown> {
-    const devices = this.devicesService.listDevices();
+  async listDevices(): Promise<Record<string, unknown>> {
+    const devices = await this.devicesService.listDevices();
 
     return {
       count: devices.length,
@@ -26,20 +26,20 @@ export class DevicesController {
   }
 
   @Get('devices/:deviceId')
-  getDevice(@Param('deviceId') deviceId: string): Record<string, unknown> {
+  async getDevice(@Param('deviceId') deviceId: string): Promise<Record<string, unknown>> {
     return {
-      device: this.devicesService.getDevice(deviceId),
+      device: await this.devicesService.getDevice(deviceId),
     };
   }
 
   @Post('devices/:deviceId/heartbeat')
-  heartbeat(
+  async heartbeat(
     @Param('deviceId') deviceId: string,
     @Body() dto: DeviceHeartbeatDto,
     @Req() request: CorrelatedRequest,
-  ): Record<string, unknown> {
+  ): Promise<Record<string, unknown>> {
     const correlationId = request.correlationId ?? 'missing-correlation-id';
-    const device = this.devicesService.recordHeartbeat(deviceId, dto, correlationId);
+    const device = await this.devicesService.recordHeartbeat(deviceId, dto, correlationId);
 
     return {
       accepted: true,

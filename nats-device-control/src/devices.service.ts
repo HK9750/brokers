@@ -77,20 +77,20 @@ export class DevicesService implements OnModuleInit, OnModuleDestroy {
       status: ack.status,
       processingMs: ack.processingMs,
     });
-    this.registry.recordCommandAck(ack, dto.command);
+    await this.registry.recordCommandAck(ack, dto.command);
 
     return ack;
   }
 
-  recordHeartbeat(deviceId: string, dto: DeviceHeartbeatDto, correlationId: string): DeviceState {
+  recordHeartbeat(deviceId: string, dto: DeviceHeartbeatDto, correlationId: string): Promise<DeviceState> {
     return this.registry.recordHeartbeat(deviceId, dto, correlationId);
   }
 
-  getDevice(deviceId: string): DeviceState {
+  getDevice(deviceId: string): Promise<DeviceState> {
     return this.registry.getDevice(deviceId);
   }
 
-  listDevices(): DeviceState[] {
+  listDevices(): Promise<DeviceState[]> {
     return this.registry.listDevices();
   }
 

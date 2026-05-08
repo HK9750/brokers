@@ -7,10 +7,17 @@ services:
       NATS_QUEUE_GROUP: device-control-workers
       DEVICE_COMMAND_TIMEOUT_MS: 1500
       DEVICE_HEARTBEAT_TTL_MS: 30000
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
     ports:
       - "3003:3003"
     depends_on:
       nats:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     restart: unless-stopped
 
@@ -25,3 +32,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: broker_suite
+      POSTGRES_PASSWORD: broker_suite
+      POSTGRES_DB: broker_suite
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U broker_suite -d broker_suite"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

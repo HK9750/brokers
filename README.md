@@ -34,7 +34,7 @@ Stop everything:
 docker compose down
 ```
 
-Stop everything and remove Redis/RabbitMQ volumes:
+Stop everything and remove Redis, RabbitMQ, and Postgres volumes:
 
 ```bash
 docker compose down -v
@@ -54,6 +54,10 @@ Clients / Postman
   +-- :3003 nats-device-api ----- NATS subjects: device.command, device.telemetry
   |
   +-- :3004 redis-presence-api -- Redis Pub/Sub channel: presence.changed
+
+All four APIs also use Postgres for durable state:
+
+  +-- postgres:5432 ---------- durable projections, job statuses, device state, presence state
 ```
 
 Each service is intentionally self-contained for local learning:
@@ -63,6 +67,7 @@ Each service is intentionally self-contained for local learning:
 | NestJS HTTP API | Accepts validated JSON requests and returns API responses. |
 | Broker producer | Publishes events, jobs, commands, or pub/sub messages. |
 | Broker consumer | Demonstrates downstream processing and broker-specific behavior. |
+| Postgres state store | Persists read models and operational state that should survive restarts. |
 | Structured logger | Emits JSON logs with correlation IDs, request metadata, broker metadata, and business decisions. |
 | Docker Compose | Runs the API and the required broker with practical health checks. |
 
@@ -70,10 +75,10 @@ The code now also includes production-shaped read/state flows:
 
 | Service | Production-Style Functionality |
 | --- | --- |
-| Kafka | Idempotency key handling and customer projections built from consumed events. |
-| RabbitMQ | Report job status store with queued, processing, completed, and failed states. |
-| NATS | Device heartbeat registry that gates command request-reply behavior. |
-| Redis Pub/Sub | Current presence state and room presence lookup with TTL-style expiry. |
+| Kafka | Idempotency key handling and Postgres-backed customer projections built from consumed events. |
+| RabbitMQ | Postgres-backed report job status store with queued, processing, completed, and failed states. |
+| NATS | Postgres-backed device heartbeat registry that gates command request-reply behavior. |
+| Redis Pub/Sub | Postgres-backed current presence state and room presence lookup with TTL-style expiry. |
 
 In production, the producer and consumer parts would normally be deployed as separate processes. They are combined here so one Docker Compose command can demonstrate the full flow.
 
@@ -154,6 +159,7 @@ docker compose logs -f redis-presence-api
 | RabbitMQ | Management UI at `http://localhost:15672`, login `guest` / `guest`. |
 | NATS | Monitoring endpoint at `http://localhost:8222`. |
 | Redis | Redis is exposed on `localhost:6379`. |
+| Postgres | Database is exposed on `localhost:5432`, user `broker_suite`, password `broker_suite`, database `broker_suite`. |
 
 ## Project Layout
 
