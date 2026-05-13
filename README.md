@@ -2,6 +2,8 @@
 
 This repository contains four independent NestJS backends. Each backend demonstrates a broker doing the job it is actually good at, instead of using every broker as a generic queue.
 
+If you only want the RabbitMQ and Kafka projects requested for this lab, use `docker-compose.rabbitmq-kafka.yml` and read `docs/RABBITMQ_KAFKA_FEATURE_COVERAGE.md`.
+
 For broker internals, production architecture, and easy engineering explanations, read `docs/BROKER_INTERNALS_AND_PRODUCTION_GUIDE.md`.
 
 The suite is designed as a practical comparison:
@@ -21,6 +23,22 @@ Run all APIs and all brokers from the suite root:
 cd /home/hasnain/Desktop/Projects/nestjs-broker-problem-suite
 docker compose up --build
 ```
+
+## Start Only RabbitMQ And Kafka
+
+Run only the two NestJS backends focused on RabbitMQ and Kafka:
+
+```bash
+cd /home/hasnain/Desktop/Projects/nestjs-broker-problem-suite
+docker compose -f docker-compose.rabbitmq-kafka.yml up --build
+```
+
+This starts:
+
+| Service | Broker | HTTP Port |
+| --- | --- | --- |
+| `kafka-order-api` | Kafka | `3001` |
+| `rabbitmq-report-api` | RabbitMQ | `3002` |
 
 Equivalent absolute command:
 
@@ -127,6 +145,7 @@ Each service README explains architecture, production flow, and functionality fl
 | --- | --- |
 | `kafka-order-stream/README.md` | Kafka order event stream and projection flow. |
 | `rabbitmq-report-jobs/README.md` | RabbitMQ durable job queue and worker acknowledgement flow. |
+| `docs/RABBITMQ_KAFKA_FEATURE_COVERAGE.md` | Focused RabbitMQ/Kafka feature matrix, examples, and learning order. |
 | `nats-device-control/README.md` | NATS command request-reply and telemetry fanout flow. |
 | `redis-presence-pubsub/README.md` | Redis Pub/Sub ephemeral presence fanout flow. |
 | `docs/BROKER_INTERNALS_AND_PRODUCTION_GUIDE.md` | Broker internals, production diagrams, tradeoffs, and failure modes. |
